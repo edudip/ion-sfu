@@ -24,7 +24,7 @@ require (
 	github.com/pion/turn/v2 v2.0.6
 	github.com/pion/webrtc/v3 v3.1.17
 	github.com/prometheus/client_golang v1.11.0
-	github.com/rs/zerolog v1.26.0
+	github.com/rs/zerolog v1.26.1
 	github.com/soheilhy/cmux v0.1.5
 	github.com/sourcegraph/jsonrpc2 v0.1.0
 	github.com/spf13/viper v1.9.0
