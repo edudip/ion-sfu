@@ -16,7 +16,6 @@ require (
 	github.com/pion/ice/v2 v2.1.18
 	github.com/pion/ion v1.10.0
 	github.com/pion/ion-log v1.2.2
-	github.com/edudip/ion-sfu v1.10.10
 	github.com/pion/logging v0.2.2
 	github.com/pion/rtcp v1.2.9
 	github.com/pion/rtp v1.7.4
