@@ -4,12 +4,12 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/edudip/ion-sfu/pkg/middlewares/datachannel"
 	"github.com/go-logr/logr"
-	"github.com/pion/ion-sfu/pkg/middlewares/datachannel"
 
-	"github.com/pion/ion-sfu/cmd/signal/grpc/server"
-	jsonrpcServer "github.com/pion/ion-sfu/cmd/signal/json-rpc/server"
-	"github.com/pion/ion-sfu/pkg/sfu"
+	"github.com/edudip/ion-sfu/cmd/signal/grpc/server"
+	jsonrpcServer "github.com/edudip/ion-sfu/cmd/signal/json-rpc/server"
+	"github.com/edudip/ion-sfu/pkg/sfu"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	// pprof

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gammazero/workerpool"
-	"github.com/pion/ion-sfu/pkg/buffer"
-	"github.com/pion/ion-sfu/pkg/stats"
+	"github.com/edudip/ion-sfu/pkg/buffer"
+	"github.com/edudip/ion-sfu/pkg/stats"
 	"github.com/pion/rtcp"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3"

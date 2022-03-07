@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pion/ion-sfu/pkg/buffer"
+	"github.com/edudip/ion-sfu/pkg/buffer"
 	"github.com/pion/webrtc/v3"
 )
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pion/ion-sfu/pkg/sfu"
+	"github.com/edudip/ion-sfu/pkg/sfu"
 	"github.com/pion/webrtc/v3"
 )
 
