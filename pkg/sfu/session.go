@@ -21,7 +21,7 @@ type Session interface {
 	AddPeer(peer Peer)
 	GetPeer(peerID string) Peer
 	RemovePeer(peer Peer)
-	AddRelayPeer(peerID string, signalData []byte) ([]byte, error)
+	AddRelayPeer(peerID string, signalData []byte) ([]byte, *relay.Peer, error)
 	AudioObserver() *AudioObserver
 	AddDatachannel(owner string, dc *webrtc.DataChannel)
 	GetDCMiddlewares() []*Datachannel
@@ -96,7 +96,7 @@ func (s *SessionLocal) GetPeer(peerID string) Peer {
 	return s.peers[peerID]
 }
 
-func (s *SessionLocal) AddRelayPeer(peerID string, signalData []byte) ([]byte, error) {
+func (s *SessionLocal) AddRelayPeer(peerID string, signalData []byte) ([]byte, *relay.Peer, error) {
 	p, err := relay.NewPeer(relay.PeerMeta{
 		PeerID:    peerID,
 		SessionID: s.id,
@@ -107,13 +107,13 @@ func (s *SessionLocal) AddRelayPeer(peerID string, signalData []byte) ([]byte, e
 	})
 	if err != nil {
 		Logger.Error(err, "Creating relay peer")
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp, err := p.Answer(signalData)
 	if err != nil {
 		Logger.Error(err, "Creating answer for relay")
-		return nil, err
+		return nil, nil, err
 	}
 
 	p.OnReady(func() {
@@ -129,7 +129,7 @@ func (s *SessionLocal) AddRelayPeer(peerID string, signalData []byte) ([]byte, e
 		s.mu.Unlock()
 	})
 
-	return resp, nil
+	return resp, p, nil
 }
 
 func (s *SessionLocal) GetRelayPeer(peerID string) *RelayPeer {
@@ -172,7 +172,10 @@ func (s *SessionLocal) AddDatachannel(owner string, dc *webrtc.DataChannel) {
 	peerOwner := s.peers[owner]
 	s.mu.Unlock()
 	peers := s.Peers()
-	peerOwner.Subscriber().RegisterDatachannel(label, dc)
+
+	if peerOwner != nil {
+		peerOwner.Subscriber().RegisterDatachannel(label, dc)
+	}
 
 	dc.OnMessage(func(msg webrtc.DataChannelMessage) {
 		s.FanOutMessage(owner, label, msg)
