@@ -160,6 +160,10 @@ func (p *Publisher) GetRouter() Router {
 	return p.router
 }
 
+func (p *Publisher) GetRelayPeers() []*relayPeer {
+	return p.relayPeers
+}
+
 // Close peer
 func (p *Publisher) Close() {
 	p.closeOnce.Do(func() {

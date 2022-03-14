@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gammazero/workerpool"
 	"github.com/edudip/ion-sfu/pkg/buffer"
 	"github.com/edudip/ion-sfu/pkg/stats"
+	"github.com/gammazero/workerpool"
 	"github.com/pion/rtcp"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3"
@@ -34,6 +34,8 @@ type Receiver interface {
 	SendRTCP(p []rtcp.Packet)
 	SetRTCPCh(ch chan []rtcp.Packet)
 	GetSenderReportTime(layer int) (rtpTS uint32, ntpTS uint64)
+	Receiver() *webrtc.RTPReceiver
+	Buffers() [3]*buffer.Buffer
 }
 
 // WebRTCReceiver receives a video track
@@ -89,6 +91,14 @@ func (w *WebRTCReceiver) StreamID() string {
 
 func (w *WebRTCReceiver) TrackID() string {
 	return w.trackID
+}
+
+func (w *WebRTCReceiver) Receiver() *webrtc.RTPReceiver {
+	return w.receiver
+}
+
+func (w *WebRTCReceiver) Buffers() [3]*buffer.Buffer {
+	return w.buffers
 }
 
 func (w *WebRTCReceiver) SSRC(layer int) uint32 {

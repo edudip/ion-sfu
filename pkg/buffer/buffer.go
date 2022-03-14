@@ -122,6 +122,10 @@ func NewBuffer(ssrc uint32, vp, ap *sync.Pool, logger logr.Logger) *Buffer {
 	return b
 }
 
+func (b *Buffer) Stats() Stats {
+	return b.stats
+}
+
 func (b *Buffer) Bind(params webrtc.RTPParameters, o Options) {
 	b.Lock()
 	defer b.Unlock()

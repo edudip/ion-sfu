@@ -66,6 +66,10 @@ func (r *RelayPeer) ID() string {
 	return r.peer.ID()
 }
 
+func (r *RelayPeer) Peer() *relay.Peer {
+	return r.peer
+}
+
 func (r *RelayPeer) Relay(signalFn func(meta relay.PeerMeta, signal []byte) ([]byte, error)) (*relay.Peer, error) {
 	rp, err := relay.NewPeer(relay.PeerMeta{
 		PeerID:    r.peer.ID(),

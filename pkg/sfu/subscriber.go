@@ -106,6 +106,10 @@ func (s *Subscriber) DataChannel(label string) *webrtc.DataChannel {
 	return s.channels[label]
 }
 
+func (p *Subscriber) PeerConnection() *webrtc.PeerConnection {
+	return p.pc
+}
+
 func (s *Subscriber) OnNegotiationNeeded(f func()) {
 	debounced := debounce.New(250 * time.Millisecond)
 	s.negotiate = func() {
