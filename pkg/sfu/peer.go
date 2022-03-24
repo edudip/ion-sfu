@@ -1,6 +1,7 @@
 package sfu
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -8,6 +9,7 @@ import (
 	"github.com/lucsky/cuid"
 
 	"github.com/pion/webrtc/v3"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -59,6 +61,7 @@ type ChannelAPIMessage struct {
 
 // PeerLocal represents a pair peer connection
 type PeerLocal struct {
+	tracer trace.Tracer
 	sync.Mutex
 	id       string
 	closed   atomicBool
@@ -77,14 +80,15 @@ type PeerLocal struct {
 }
 
 // NewPeer creates a new PeerLocal for signaling with the given SFU
-func NewPeer(provider SessionProvider) *PeerLocal {
+func NewPeer(tracer trace.Tracer, provider SessionProvider) *PeerLocal {
 	return &PeerLocal{
+		tracer:   tracer,
 		provider: provider,
 	}
 }
 
 // Join initializes this peer for a given sessionID
-func (p *PeerLocal) Join(sid, uid string, config ...JoinConfig) error {
+func (p *PeerLocal) Join(ctx context.Context, sid, uid string, config ...JoinConfig) error {
 	var conf JoinConfig
 	if len(config) > 0 {
 		conf = config[0]
@@ -101,8 +105,10 @@ func (p *PeerLocal) Join(sid, uid string, config ...JoinConfig) error {
 	p.id = uid
 	var err error
 
+	ctx, span := p.tracer.Start(ctx, "ion-peer/get-session")
 	s, cfg := p.provider.GetSession(sid)
 	p.session = s
+	span.End()
 
 	if !conf.NoSubscribe {
 		p.subscriber, err = NewSubscriber(uid, cfg)
@@ -122,7 +128,9 @@ func (p *PeerLocal) Join(sid, uid string, config ...JoinConfig) error {
 			}
 
 			Logger.V(1).Info("Negotiation needed", "peer_id", p.id)
+			_, span := p.tracer.Start(ctx, "ion-peer/create-offer")
 			offer, err := p.subscriber.CreateOffer()
+			span.End()
 			if err != nil {
 				Logger.Error(err, "CreateOffer error")
 				return
@@ -180,7 +188,9 @@ func (p *PeerLocal) Join(sid, uid string, config ...JoinConfig) error {
 		})
 	}
 
+	ctx, span = p.tracer.Start(ctx, "ion-peer/add-peer-to-session")
 	p.session.AddPeer(p)
+	span.End()
 
 	Logger.V(0).Info("PeerLocal join SessionLocal", "peer_id", p.id, "session_id", sid)
 

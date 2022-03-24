@@ -2,11 +2,11 @@ package sfu
 
 import (
 	"context"
+	"github.com/edudip/ion-sfu/pkg/util/throttle"
 	"io"
 	"sync"
 	"time"
 
-	"github.com/bep/debounce"
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 )
@@ -111,9 +111,9 @@ func (p *Subscriber) PeerConnection() *webrtc.PeerConnection {
 }
 
 func (s *Subscriber) OnNegotiationNeeded(f func()) {
-	debounced := debounce.New(250 * time.Millisecond)
+	throttler := throttle.New(250 * time.Millisecond)
 	s.negotiate = func() {
-		debounced(f)
+		throttler(f)
 	}
 }
 
