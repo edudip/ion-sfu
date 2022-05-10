@@ -607,3 +607,7 @@ func (d *DownTrack) getSRStats() (octets, packets uint32) {
 	packets = atomic.LoadUint32(&d.packetCount)
 	return
 }
+
+func (d *DownTrack) Receiver() Receiver {
+	return d.receiver
+}

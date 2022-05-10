@@ -425,3 +425,7 @@ func (w *WebRTCReceiver) storeDownTrack(layer int, dt *DownTrack) {
 	ndts[len(ndts)-1] = dt
 	w.downTracks[layer].Store(ndts)
 }
+
+func (w *WebRTCReceiver) IsSimulcast() bool {
+	return w.isSimulcast
+}
