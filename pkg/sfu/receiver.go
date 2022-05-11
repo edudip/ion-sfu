@@ -36,6 +36,7 @@ type Receiver interface {
 	GetSenderReportTime(layer int) (rtpTS uint32, ntpTS uint64)
 	Receiver() *webrtc.RTPReceiver
 	Buffers() [3]*buffer.Buffer
+	IsSimulcast() bool
 }
 
 // WebRTCReceiver receives a video track
