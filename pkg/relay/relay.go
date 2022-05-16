@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/edudip/ion-sfu/pkg/helpers"
 	"math/rand"
 	"strings"
 	"sync"
@@ -406,22 +407,38 @@ func (p *Peer) receive(s *signal) error {
 		return err
 	}
 
-	if err = recv.Receive(webrtc.RTPReceiveParameters{Encodings: []webrtc.RTPDecodingParameters{
-		{
-			webrtc.RTPCodingParameters{
-				RID:         s.Encodings.RID,
-				SSRC:        s.Encodings.SSRC,
-				PayloadType: s.Encodings.PayloadType,
-			},
-		},
-	}}); err != nil {
-		return err
+	rtpCodingParameters := webrtc.RTPCodingParameters{
+		SSRC:        s.Encodings.SSRC,
+		PayloadType: s.Encodings.PayloadType,
 	}
 
-	recv.SetRTPParameters(webrtc.RTPParameters{
+	if k == webrtc.RTPCodecTypeVideo {
+		rtpCodingParameters.RID = s.Encodings.RID
+	}
+
+	rtpParameters := webrtc.RTPParameters{
 		HeaderExtensions: nil,
 		Codecs:           []webrtc.RTPCodecParameters{*s.TrackMeta.CodecParameters},
-	})
+	}
+
+	rtpReceiveParameters := webrtc.RTPReceiveParameters{Encodings: []webrtc.RTPDecodingParameters{
+		{
+			rtpCodingParameters,
+		},
+	}}
+
+	if s.Encodings.RID != "" {
+		streamInfo := helpers.CreateStreamInfo("", s.Encodings.SSRC, s.Encodings.PayloadType, rtpParameters.Codecs[0].RTPCodecCapability, nil)
+		if _, err = recv.ReceiveForRid(s.Encodings.SSRC, s.Encodings.RID, rtpParameters, rtpReceiveParameters, streamInfo); err != nil {
+			return err
+		}
+	} else {
+		if err = recv.Receive(rtpReceiveParameters); err != nil {
+			return err
+		}
+	}
+
+	recv.SetRTPParameters(rtpParameters)
 
 	track := recv.Track()
 
@@ -435,8 +452,7 @@ func (p *Peer) receive(s *signal) error {
 }
 
 // AddTrack is used to negotiate a track to the remote peer
-func (p *Peer) AddTrack(receiver *webrtc.RTPReceiver, remoteTrack *webrtc.TrackRemote,
-	localTrack webrtc.TrackLocal) (*webrtc.RTPSender, error) {
+func (p *Peer) AddTrack(receiver *webrtc.RTPReceiver, remoteTrack *webrtc.TrackRemote, localTrack webrtc.TrackLocal) (*webrtc.RTPSender, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -459,6 +475,7 @@ func (p *Peer) AddTrack(receiver *webrtc.RTPReceiver, remoteTrack *webrtc.TrackR
 
 	s.Encodings = &webrtc.RTPCodingParameters{
 		SSRC:        sdr.GetParameters().Encodings[0].SSRC,
+		RID:         sdr.GetParameters().Encodings[0].RID,
 		PayloadType: remoteTrack.PayloadType(),
 	}
 	pld, err := json.Marshal(&s)
@@ -480,6 +497,7 @@ func (p *Peer) AddTrack(receiver *webrtc.RTPReceiver, remoteTrack *webrtc.TrackR
 			{
 				webrtc.RTPCodingParameters{
 					SSRC:        s.Encodings.SSRC,
+					RID:         s.Encodings.RID,
 					PayloadType: s.Encodings.PayloadType,
 				},
 			},

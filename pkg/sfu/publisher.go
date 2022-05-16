@@ -100,7 +100,12 @@ func NewPublisher(id string, session Session, cfg *WebRTCTransportConfig) (*Publ
 			}
 		} else {
 			p.mu.Lock()
-			p.tracks = append(p.tracks, PublisherTrack{track, r, false})
+			p.tracks = append(p.tracks, PublisherTrack{track, r, true})
+			for _, rp := range p.relayPeers {
+				if err = p.createRelayTrack(track, r, rp.peer); err != nil {
+					Logger.V(1).Error(err, "Creating relay track.", "peer_id", p.id)
+				}
+			}
 			p.mu.Unlock()
 		}
 	})
@@ -258,10 +263,7 @@ func (p *Publisher) Relay(signalFn func(meta relay.PeerMeta, signal []byte) ([]b
 
 		p.mu.Lock()
 		for _, tp := range p.tracks {
-			if !tp.clientRelay {
-				// simulcast will just relay client track for now
-				continue
-			}
+			// create relay tracks on publisher
 			if err = p.createRelayTrack(tp.Track, tp.Receiver, rp); err != nil {
 				Logger.V(1).Error(err, "Creating relay track.", "peer_id", p.id)
 			}
@@ -376,7 +378,7 @@ func (p *Publisher) createRelayTrack(track *webrtc.TrackRemote, receiver Receive
 		Channels:     codec.Channels,
 		SDPFmtpLine:  codec.SDPFmtpLine,
 		RTCPFeedback: []webrtc.RTCPFeedback{{"nack", ""}, {"nack", "pli"}},
-	}, receiver, p.cfg.BufferFactory, p.id, p.cfg.Router.MaxPacketTrack)
+	}, receiver, p.cfg.BufferFactory, p.id, p.cfg.Router.MaxPacketTrack, track.RID())
 	if err != nil {
 		Logger.V(1).Error(err, "Create Relay downtrack err", "peer_id", p.id)
 		return err
@@ -388,13 +390,14 @@ func (p *Publisher) createRelayTrack(track *webrtc.TrackRemote, receiver Receive
 		return fmt.Errorf("relay: %w", err)
 	}
 
-	p.cfg.BufferFactory.GetOrNew(packetio.RTCPBufferPacket,
-		uint32(sdr.GetParameters().Encodings[0].SSRC)).(*buffer.RTCPReader).OnPacket(func(bytes []byte) {
+	p.cfg.BufferFactory.GetOrNew(packetio.RTCPBufferPacket, uint32(sdr.GetParameters().Encodings[0].SSRC)).(*buffer.RTCPReader).OnPacket(func(bytes []byte) {
+
 		pkts, err := rtcp.Unmarshal(bytes)
 		if err != nil {
 			Logger.V(1).Error(err, "Unmarshal rtcp reports", "peer_id", p.id)
 			return
 		}
+
 		var rpkts []rtcp.Packet
 		for _, pkt := range pkts {
 			switch pk := pkt.(type) {
@@ -420,7 +423,8 @@ func (p *Publisher) createRelayTrack(track *webrtc.TrackRemote, receiver Receive
 		}
 	})
 
-	receiver.AddDownTrack(downTrack, true)
+	receiver.AddRelayDownTrack(downTrack, track.RID())
+
 	return nil
 }
 

@@ -1,11 +1,10 @@
 package buffer
 
 import (
-	"io"
-	"sync"
-
 	"github.com/go-logr/logr"
 	"github.com/pion/transport/packetio"
+	"io"
+	"sync"
 )
 
 type Factory struct {

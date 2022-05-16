@@ -25,6 +25,7 @@ type Receiver interface {
 	SetTrackMeta(trackID, streamID string)
 	AddUpTrack(track *webrtc.TrackRemote, buffer *buffer.Buffer, bestQualityFirst bool)
 	AddDownTrack(track *DownTrack, bestQualityFirst bool)
+	AddRelayDownTrack(track *DownTrack, layer string)
 	SwitchDownTrack(track *DownTrack, layer int) error
 	GetBitrate() [3]uint64
 	GetMaxTemporalLayer() [3]int32
@@ -210,6 +211,32 @@ func (w *WebRTCReceiver) AddDownTrack(track *DownTrack, bestQualityFirst bool) {
 	w.Unlock()
 }
 
+func (w *WebRTCReceiver) AddRelayDownTrack(track *DownTrack, rid string) {
+	if w.closed.get() {
+		return
+	}
+
+	var layer int
+	switch rid {
+	case fullResolution:
+		layer = 2
+	case halfResolution:
+		layer = 1
+	default:
+		layer = 0
+	}
+
+	if w.isDownTrackSubscribed(layer, track) {
+		return
+	}
+	track.SetInitialLayers(int32(layer), 0)
+	track.trackType = SimpleDownTrack
+
+	w.Lock()
+	w.storeDownTrack(layer, track)
+	w.Unlock()
+}
+
 func (w *WebRTCReceiver) SwitchDownTrack(track *DownTrack, layer int) error {
 	if w.closed.get() {
 		return errNoReceiverFound
@@ -342,6 +369,21 @@ func (w *WebRTCReceiver) RetransmitPackets(track *DownTrack, packets []packetMet
 	return nil
 }
 
+func (w *WebRTCReceiver) moveDownTrack(fromLayer, toLayer int, dt *DownTrack) {
+	// Remove from previous layer first
+	dts := w.downTracks[fromLayer].Load().([]*DownTrack)
+	ndts := make([]*DownTrack, 0, len(dts))
+	for _, dt := range dts {
+		if dt.id != dt.id {
+			ndts = append(ndts, dt)
+		}
+	}
+	w.downTracks[fromLayer].Store(ndts)
+
+	// Add it to the new layer
+	w.storeDownTrack(toLayer, dt)
+}
+
 func (w *WebRTCReceiver) writeRTP(layer int) {
 	defer func() {
 		w.closeOnce.Do(func() {
@@ -365,8 +407,7 @@ func (w *WebRTCReceiver) writeRTP(layer int) {
 				if pkt.KeyFrame {
 					w.Lock()
 					for idx, dt := range w.pendingTracks[layer] {
-						w.deleteDownTrack(dt.CurrentSpatialLayer(), dt.id)
-						w.storeDownTrack(layer, dt)
+						w.moveDownTrack(dt.CurrentSpatialLayer(), layer, dt)
 						dt.SwitchSpatialLayerDone(int32(layer))
 						w.pendingTracks[layer][idx] = nil
 					}

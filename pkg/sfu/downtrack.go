@@ -27,6 +27,7 @@ const (
 type DownTrack struct {
 	id            string
 	peerID        string
+	rid           string
 	bound         atomicBool
 	mime          string
 	ssrc          uint32
@@ -69,7 +70,7 @@ type DownTrack struct {
 }
 
 // NewDownTrack returns a DownTrack.
-func NewDownTrack(c webrtc.RTPCodecCapability, r Receiver, bf *buffer.Factory, peerID string, mt int) (*DownTrack, error) {
+func NewDownTrack(c webrtc.RTPCodecCapability, r Receiver, bf *buffer.Factory, peerID string, mt int, rid string) (*DownTrack, error) {
 	return &DownTrack{
 		id:            r.TrackID(),
 		peerID:        peerID,
@@ -78,6 +79,7 @@ func NewDownTrack(c webrtc.RTPCodecCapability, r Receiver, bf *buffer.Factory, p
 		bufferFactory: bf,
 		receiver:      r,
 		codec:         c,
+		rid:           rid,
 	}, nil
 }
 
@@ -128,8 +130,8 @@ func (d *DownTrack) Codec() webrtc.RTPCodecCapability { return d.codec }
 // StreamID is the group this track belongs too. This must be unique
 func (d *DownTrack) StreamID() string { return d.streamID }
 
-// RID is the RTP Stream ID for this track. This is Simulcast specific and not used.
-func (d *DownTrack) RID() string { return "" }
+// RID is the RTP Stream ID for this track.
+func (d *DownTrack) RID() string { return d.rid }
 
 // Kind controls if this TrackLocal is audio or video
 func (d *DownTrack) Kind() webrtc.RTPCodecType {
@@ -610,4 +612,8 @@ func (d *DownTrack) getSRStats() (octets, packets uint32) {
 
 func (d *DownTrack) Receiver() Receiver {
 	return d.receiver
+}
+
+func (d *DownTrack) Type() DownTrackType {
+	return d.trackType
 }

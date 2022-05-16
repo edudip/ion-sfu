@@ -50,7 +50,12 @@ func NewRelayPeer(peer *relay.Peer, session Session, config *WebRTCTransportConf
 			rp.mu.Unlock()
 		} else {
 			rp.mu.Lock()
-			rp.tracks = append(rp.tracks, PublisherTrack{track, recv, false})
+			rp.tracks = append(rp.tracks, PublisherTrack{track, recv, true})
+			for _, lrp := range rp.relayPeers {
+				if err := rp.createRelayTrack(track, recv, lrp); err != nil {
+					Logger.V(1).Error(err, "Creating relay track.", "peer_id", peer.ID())
+				}
+			}
 			rp.mu.Unlock()
 		}
 	})
@@ -132,7 +137,7 @@ func (r *RelayPeer) createRelayTrack(track *webrtc.TrackRemote, receiver Receive
 		Channels:     codec.Channels,
 		SDPFmtpLine:  codec.SDPFmtpLine,
 		RTCPFeedback: []webrtc.RTCPFeedback{{"nack", ""}, {"nack", "pli"}},
-	}, receiver, r.config.BufferFactory, r.ID(), r.config.Router.MaxPacketTrack)
+	}, receiver, r.config.BufferFactory, r.ID(), r.config.Router.MaxPacketTrack, track.RID())
 	if err != nil {
 		Logger.V(1).Error(err, "Create Relay downtrack err", "peer_id", r.ID())
 		return err
@@ -146,6 +151,7 @@ func (r *RelayPeer) createRelayTrack(track *webrtc.TrackRemote, receiver Receive
 
 	r.config.BufferFactory.GetOrNew(packetio.RTCPBufferPacket,
 		uint32(sdr.GetParameters().Encodings[0].SSRC)).(*buffer.RTCPReader).OnPacket(func(bytes []byte) {
+
 		pkts, err := rtcp.Unmarshal(bytes)
 		if err != nil {
 			Logger.V(1).Error(err, "Unmarshal rtcp reports", "peer_id", r.ID())
