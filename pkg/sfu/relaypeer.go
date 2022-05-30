@@ -2,15 +2,14 @@ package sfu
 
 import (
 	"fmt"
-	"io"
-	"sync"
-	"time"
-
 	"github.com/edudip/ion-sfu/pkg/buffer"
 	"github.com/edudip/ion-sfu/pkg/relay"
 	"github.com/pion/rtcp"
 	"github.com/pion/transport/packetio"
 	"github.com/pion/webrtc/v3"
+	"io"
+	"sync"
+	"time"
 )
 
 type RelayPeer struct {

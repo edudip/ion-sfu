@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/edudip/ion-sfu/pkg/helpers"
 	"math/rand"
 	"strings"
 	"sync"
@@ -427,15 +426,8 @@ func (p *Peer) receive(s *signal) error {
 		},
 	}}
 
-	if s.Encodings.RID != "" {
-		streamInfo := helpers.CreateStreamInfo("", s.Encodings.SSRC, s.Encodings.PayloadType, rtpParameters.Codecs[0].RTPCodecCapability, nil)
-		if _, err = recv.ReceiveForRid(s.Encodings.SSRC, s.Encodings.RID, rtpParameters, rtpReceiveParameters, streamInfo); err != nil {
-			return err
-		}
-	} else {
-		if err = recv.Receive(rtpReceiveParameters); err != nil {
-			return err
-		}
+	if err = recv.Receive(rtpReceiveParameters); err != nil {
+		return err
 	}
 
 	recv.SetRTPParameters(rtpParameters)
@@ -632,6 +624,22 @@ func (p *Peer) reply(id uint64, event string, payload []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (p *Peer) IsSending() bool {
+	return len(p.senders) > 0
+}
+
+func (p *Peer) IsReceiving() bool {
+	return len(p.receivers) > 0
+}
+
+func (p *Peer) Receivers() []*webrtc.RTPReceiver {
+	return p.receivers
+}
+
+func (p *Peer) Senders() []*webrtc.RTPSender {
+	return p.senders
 }
 
 func joinErrs(errs ...error) error {

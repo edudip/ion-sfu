@@ -41,6 +41,10 @@ type relayPeer struct {
 	relayFanOutDataChannels bool
 }
 
+func (rp *relayPeer) Peer() *relay.Peer {
+	return rp.peer
+}
+
 type PublisherTrack struct {
 	Track    *webrtc.TrackRemote
 	Receiver Receiver
