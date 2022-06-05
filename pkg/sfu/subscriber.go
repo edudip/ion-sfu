@@ -99,6 +99,28 @@ func (s *Subscriber) AddDatachannel(peer Peer, dc *Datachannel) error {
 	return nil
 }
 
+func (s *Subscriber) Answer(offer webrtc.SessionDescription) (webrtc.SessionDescription, error) {
+	if err := s.pc.SetRemoteDescription(offer); err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+
+	for _, c := range s.candidates {
+		if err := s.pc.AddICECandidate(c); err != nil {
+			Logger.Error(err, "Add subscriber ice candidate to peer err", "peer_id", s.id)
+		}
+	}
+	s.candidates = nil
+
+	answer, err := s.pc.CreateAnswer(nil)
+	if err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+	if err := s.pc.SetLocalDescription(answer); err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+	return answer, nil
+}
+
 // DataChannel returns the channel for a label
 func (s *Subscriber) DataChannel(label string) *webrtc.DataChannel {
 	s.RLock()
@@ -117,8 +139,8 @@ func (s *Subscriber) OnNegotiationNeeded(f func()) {
 	}
 }
 
-func (s *Subscriber) CreateOffer() (webrtc.SessionDescription, error) {
-	offer, err := s.pc.CreateOffer(nil)
+func (s *Subscriber) CreateOffer(options *webrtc.OfferOptions) (webrtc.SessionDescription, error) {
+	offer, err := s.pc.CreateOffer(options)
 	if err != nil {
 		return webrtc.SessionDescription{}, err
 	}

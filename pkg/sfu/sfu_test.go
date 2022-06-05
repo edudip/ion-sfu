@@ -1,6 +1,7 @@
 package sfu
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -225,7 +226,7 @@ func TestSFU_SessionScenarios(t *testing.T) {
 							assert.NoError(t, err)
 							sub, err := api.NewPeerConnection(webrtc.Configuration{})
 							assert.NoError(t, err)
-							local := NewPeer(sfu)
+							local := NewPeer(nil, sfu)
 							_, err = pub.CreateDataChannel("ion-sfu", nil)
 							p := &peer{id: action.id, remotePub: pub, remoteSub: sub, local: local}
 							sub.OnTrack(func(track *webrtc.TrackRemote, recv *webrtc.RTPReceiver) {
@@ -299,7 +300,7 @@ func TestSFU_SessionScenarios(t *testing.T) {
 							err = p.remotePub.SetLocalDescription(offer)
 							assert.NoError(t, err)
 							<-gatherComplete
-							err = p.local.Join("test sid", cuid.New())
+							err = p.local.Join(context.TODO(), "test sid", cuid.New())
 							assert.NoError(t, err)
 							answer, err := p.local.Answer(*p.remotePub.LocalDescription())
 							err = p.remotePub.SetRemoteDescription(*answer)

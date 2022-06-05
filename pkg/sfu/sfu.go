@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-logr/logr"
-	"github.com/pion/ice/v2"
 	"github.com/edudip/ion-sfu/pkg/buffer"
 	"github.com/edudip/ion-sfu/pkg/stats"
+	"github.com/go-logr/logr"
+	"github.com/pion/ice/v2"
 	"github.com/pion/turn/v2"
 	"github.com/pion/webrtc/v3"
 )

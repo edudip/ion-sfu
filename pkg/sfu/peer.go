@@ -43,7 +43,7 @@ type JoinConfig struct {
 	NoSubscribe bool
 	// If true the peer will not automatically subscribe all tracks,
 	// and then the peer can use peer.Subscriber().AddDownTrack/RemoveDownTrack
-	// to customize the subscrbe stream combination as needed.
+	// to customize the subscribe stream combination as needed.
 	// this parameter depends on NoSubscribe=false.
 	NoAutoSubscribe bool
 }
@@ -129,7 +129,7 @@ func (p *PeerLocal) Join(ctx context.Context, sid, uid string, config ...JoinCon
 
 			Logger.V(1).Info("Negotiation needed", "peer_id", p.id)
 			_, span := p.tracer.Start(ctx, "ion-peer/create-offer")
-			offer, err := p.subscriber.CreateOffer()
+			offer, err := p.subscriber.CreateOffer(nil)
 			span.End()
 			if err != nil {
 				Logger.Error(err, "CreateOffer error")
@@ -213,6 +213,28 @@ func (p *PeerLocal) Answer(sdp webrtc.SessionDescription) (*webrtc.SessionDescri
 	}
 
 	answer, err := p.publisher.Answer(sdp)
+	if err != nil {
+		return nil, fmt.Errorf("error creating answer: %v", err)
+	}
+
+	Logger.V(0).Info("PeerLocal send answer", "peer_id", p.id)
+
+	return &answer, nil
+}
+
+// Answer an offer from remote
+func (p *PeerLocal) AnswerSubscriber(sdp webrtc.SessionDescription) (*webrtc.SessionDescription, error) {
+	if p.subscriber == nil {
+		return nil, ErrNoTransportEstablished
+	}
+
+	Logger.V(0).Info("PeerLocal got offer", "peer_id", p.id)
+
+	if p.subscriber.pc.SignalingState() != webrtc.SignalingStateStable {
+		return nil, ErrOfferIgnored
+	}
+
+	answer, err := p.subscriber.Answer(sdp)
 	if err != nil {
 		return nil, fmt.Errorf("error creating answer: %v", err)
 	}
