@@ -46,6 +46,9 @@ type JoinConfig struct {
 	// to customize the subscribe stream combination as needed.
 	// this parameter depends on NoSubscribe=false.
 	NoAutoSubscribe bool
+	// InitialSubscriberDataChannelLabels is a list of labels for data channels
+	// that should be created when creating a new subscriber peer connection.
+	InitialSubscriberDataChannelLabels []string
 }
 
 // SessionProvider provides the SessionLocal to the sfu.Peer
@@ -111,7 +114,7 @@ func (p *PeerLocal) Join(ctx context.Context, sid, uid string, config ...JoinCon
 	span.End()
 
 	if !conf.NoSubscribe {
-		p.subscriber, err = NewSubscriber(uid, cfg)
+		p.subscriber, err = NewSubscriber(uid, cfg, conf.InitialSubscriberDataChannelLabels)
 		if err != nil {
 			return fmt.Errorf("error creating transport: %v", err)
 		}

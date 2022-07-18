@@ -274,7 +274,6 @@ func (s *SessionLocal) Subscribe(peer Peer) {
 							Logger.Error(err, "Sending dc message err")
 						}
 					}
-
 				}
 			}
 		})
@@ -338,6 +337,7 @@ func (s *SessionLocal) Close() {
 }
 
 func (s *SessionLocal) FanOutMessage(origin, label string, msg webrtc.DataChannelMessage) {
+
 	dcs := s.GetDataChannels(origin, label)
 	for _, dc := range dcs {
 		if msg.IsString {
@@ -364,6 +364,14 @@ func (s *SessionLocal) GetDataChannels(peerID, label string) []*webrtc.DataChann
 		if p.Subscriber() != nil {
 			if dc := p.Subscriber().DataChannel(label); dc != nil && dc.ReadyState() == webrtc.DataChannelStateOpen {
 				dcs = append(dcs, dc)
+			}
+		}
+
+		if p.Publisher() != nil && p.Publisher().Relayed() {
+			for _, rp := range p.Publisher().relayPeers {
+				if dc := rp.Peer().GetDataChannel(label); dc != nil {
+					dcs = append(dcs, dc)
+				}
 			}
 		}
 

@@ -89,6 +89,8 @@ type Peer struct {
 	signalingDC     *webrtc.DataChannel
 	gatherer        *webrtc.ICEGatherer
 	dcIndex         uint16
+	dcMu            sync.Mutex
+	dcs             map[string]*webrtc.DataChannel
 
 	onReady       atomic.Value // func()
 	onClose       atomic.Value // func()
@@ -131,6 +133,8 @@ func NewPeer(meta PeerMeta, conf *PeerConfig) (*Peer, error) {
 		dtls:            dtls,
 		gatherer:        gatherer,
 		pendingRequests: make(map[uint64]chan []byte),
+		dcMu:            sync.Mutex{},
+		dcs:             map[string]*webrtc.DataChannel{},
 	}
 
 	sctp.OnDataChannel(func(channel *webrtc.DataChannel) {
@@ -351,7 +355,20 @@ func (p *Peer) CreateDataChannel(label string) (*webrtc.DataChannel, error) {
 		return nil, ErrRelayPeerNotReady
 	}
 
-	return p.createDataChannel(label)
+	dc, err := p.createDataChannel(label)
+	if err != nil {
+		return nil, err
+	}
+
+	p.dcMu.Lock()
+	p.dcs[label] = dc
+	p.dcMu.Unlock()
+
+	return dc, nil
+}
+
+func (p *Peer) GetDataChannel(label string) *webrtc.DataChannel {
+	return p.dcs[label]
 }
 
 func (p *Peer) createDataChannel(label string) (*webrtc.DataChannel, error) {

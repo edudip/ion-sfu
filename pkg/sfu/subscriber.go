@@ -31,7 +31,7 @@ type Subscriber struct {
 }
 
 // NewSubscriber creates a new Subscriber
-func NewSubscriber(id string, cfg WebRTCTransportConfig) (*Subscriber, error) {
+func NewSubscriber(id string, cfg WebRTCTransportConfig, initialDatachannelLabels []string) (*Subscriber, error) {
 	me, err := getSubscriberMediaEngine()
 	if err != nil {
 		Logger.Error(err, "NewPeer error")
@@ -68,6 +68,12 @@ func NewSubscriber(id string, cfg WebRTCTransportConfig) (*Subscriber, error) {
 			})
 		}
 	})
+
+	for _, dcLabel := range initialDatachannelLabels {
+		if _, err := s.AddDataChannel(dcLabel); err != nil {
+			return nil, err
+		}
+	}
 
 	go s.downTracksReports()
 
