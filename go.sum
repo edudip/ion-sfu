@@ -29,6 +29,7 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/edudip/webrtc/v3 v3.1.40-0.20220516185223-924ad97093dd h1:hrWgCFzWoingkUTOss3t0O13eJ3qJNmDAzFHJ6X6TQc=
 github.com/edudip/webrtc/v3 v3.1.40-0.20220516185223-924ad97093dd/go.mod h1:+RHmeR9uQQgoCaVs1R9vntldMbtFgD5Fk6klO7q06f4=
 github.com/edudip/webrtc/v3 v3.1.40-0.20220622213243-80e5cdda5687/go.mod h1:ffD9DulDrPxyWvDPUIPAOSAWx9GUlOExiJPf7cCcMLA=
+github.com/edudip/webrtc/v3 v3.1.40-0.20220628143738-594a573e7edb/go.mod h1:ffD9DulDrPxyWvDPUIPAOSAWx9GUlOExiJPf7cCcMLA=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=

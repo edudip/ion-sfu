@@ -53,4 +53,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
-replace github.com/pion/webrtc/v3 => github.com/edudip/webrtc/v3 v3.1.40-0.20220622213243-80e5cdda5687
+replace github.com/pion/webrtc/v3 => github.com/edudip/webrtc/v3 v3.1.40-0.20220628143738-594a573e7edb
