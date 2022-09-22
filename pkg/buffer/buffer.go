@@ -47,7 +47,7 @@ type Buffer struct {
 	videoPool  *sync.Pool
 	audioPool  *sync.Pool
 	codecType  webrtc.RTPCodecType
-	extPackets deque.Deque
+	extPackets deque.Deque[interface{}]
 	pPackets   []pendingPackets
 	closeOnce  sync.Once
 	mediaSSRC  uint32

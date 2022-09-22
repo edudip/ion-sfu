@@ -2,6 +2,8 @@ package sfu
 
 import (
 	"fmt"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"sync"
 	"sync/atomic"
@@ -32,6 +34,7 @@ type Publisher struct {
 	onPublisherTrack                  atomic.Value // func(PublisherTrack)
 
 	closeOnce sync.Once
+	tracer    trace.Tracer
 }
 
 type relayPeer struct {
@@ -76,6 +79,7 @@ func NewPublisher(id string, session Session, cfg *WebRTCTransportConfig) (*Publ
 		cfg:     cfg,
 		router:  newRouter(id, session, cfg),
 		session: session,
+		tracer:  otel.Tracer("ion-sfu/publisher"),
 	}
 
 	pc.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
@@ -216,6 +220,7 @@ func (p *Publisher) PeerConnection() *webrtc.PeerConnection {
 // Relay will relay all current and future tracks from current Publisher
 func (p *Publisher) Relay(signalFn func(meta relay.PeerMeta, signal []byte) ([]byte, error),
 	options ...func(r *relayPeer)) (*relay.Peer, error) {
+
 	lrp := &relayPeer{}
 	for _, o := range options {
 		o(lrp)

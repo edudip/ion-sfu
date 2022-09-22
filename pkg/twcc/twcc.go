@@ -118,7 +118,7 @@ func (t *Responder) buildTransportCCPacket() rtcp.RawPacket {
 	lastStatus := rtcp.TypeTCCPacketReceivedWithoutDelta
 	maxStatus := rtcp.TypeTCCPacketNotReceived
 
-	var statusList deque.Deque
+	var statusList deque.Deque[interface{}]
 	statusList.SetMinCapacity(3)
 
 	for _, stat := range tccPkts {

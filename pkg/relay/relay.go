@@ -185,7 +185,7 @@ func (p *Peer) Offer(signalFn func(meta PeerMeta, signal []byte) ([]byte, error)
 			close(gatherFinished)
 		}
 	})
-	// Gather candidates
+
 	if err := p.gatherer.Gather(); err != nil {
 		return err
 	}
